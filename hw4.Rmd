@@ -1,0 +1,102 @@
+---
+title: "hw4"
+author: "Zihao Han"
+date: "March 7, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#1.Get a frequency breakdown of the number of chicks, their average weight and the standard deviation of the weights in each of the diets at the start of the study. Store the resulting data frame in a variable named weight0 and print.
+```{r}
+library(datasets)
+data("ChickWeight")
+library(ggplot2)
+library(dplyr)
+str(ChickWeight)
+View(ChickWeight)
+
+weight0 <- ChickWeight %>%
+group_by(Chick) %>%
+summarize(averageweight = mean(weight),standard_deviation_weight = sd(weight, na.rm = TRUE))
+print(weight0)
+```
+#2.Each chick should have twelve weight measurements. Use the dplyr package to identify how many measurements are there for each chick. Extract a subset of the data for all chicks with complete information, name the data set complete, and print the first 3 rows. (Hint: you might want to use mutate to introduce a helper variable consisting of the number of observations)
+```{r}
+
+
+
+complete <-ChickWeight%>%
+  count(Chick)%>%
+  group_by(Chick)%>%
+  filter(n==12)
+
+a<-inner_join(complete,ChickWeight,by='Chick')
+
+head(complete,3)
+head(a)
+
+
+```
+#3.In the complete data set introduce a new variable that measures the current weight difference compared to day 0. Name this variable  weightgain and print the first 3 rows of the new data frame.
+```{r}
+a<-inner_join(complete,ChickWeight,by='Chick')
+
+
+
+mutate(a,weight0=weight[Time==0],weight21=weight[Time==21],weightgain=weight21-weight0)
+weightgain<-mutate(a,weight0=weight[Time==0],weight21=weight[Time==21],weightgain=weight21-weight0)
+
+head(weightgain,3)
+
+```
+#4.{ggplot2} to create side-by-side boxplots of weightgain by Diet for day 21. Describe the relationship in 2-3 sentences. Change the order of the categories in the Diet variable such that the boxplots are ordered by median weightgain, and the lower limit of the y axis should be 0.
+```{r}
+levels(weightgain$Diet)=c("1","2","3","4")
+
+ggplot(weightgain,aes(x=Diet,y=as.numeric(weightgain)))+geom_boxplot()
+
+```
+#### we can say that when we have more diet we will gain more weight on average. But once it reaches 4 meal a day the weight gian will reduce. However, It's sitll higher than 2 diet. 
+
+
+#5.Answer the following question using numerical and graphical summary: Which chick gained the most weight and which gained the least weight? What diets were they on?
+```{r}
+ggplot(weightgain,aes(x=Chick,y=as.numeric(weightgain)))+geom_point()
+b<-weightgain[order(-weightgain$weightgain),]
+b
+
+```
+###the largest weight gain is chicken 35 with 332 weightgain on 3 diet per day.the smallest weight gain is chicken 24 with 32 weightgain on 2 diet per day.
+
+
+#6.For the chicks with the least and the most weight at time 0, plot their growth trajectories over time. 
+#5 pts of extra credit: Add to the plot the average growth trajectory for all chicks (calculated as the mean weight for each chick at each time). How do the trajectories compare?
+```{r}
+c<-weightgain[order(-weightgain$weight0),]
+c
+
+d<-filter(weightgain,Chick==(19  ))
+e<-filter(weightgain,Chick==(48  ))
+f<-full_join(e,d)
+f
+ggplot(d,aes(x=Time,y=weight))+geom_line()
+ggplot(e,aes(x=Time,y=weight))+geom_line()
+ggplot(f,aes(x=Time,y=weight,color=Chick))+geom_line()
+ggplot(weightgain,aes(x=Time,y=weight,color=Chick))+geom_line()
+ggplot(weightgain,aes(x=Time,y=weight))+geom_line()+facet_wrap(~Chick,ncol=10,scales = "free_y")
+
+
+```
+
+####least weight0 is 48 and largest weight is 19. the groth of 48 is higher than 19.
+####and the over all chick have the smooth weight growth but 9,13,6,24,36 have weight lose during the reaserch.
+
+
+#7.What else do you find interesting in the dataset? Show your exploratory analysis.
+```{r}
+ggplot(weightgain,aes(x=Time,y=weight,color=Chick))+geom_boxplot()
+```
+#### we could see that there is really obvious data sample that a small boxplt apper. By looking up the dataset, I found out that it is the data sample 24 with 32 weightgain. And also there is another fact that such as 13 and 9 that have weight lose have the higher median. So by looking the boxplot we could alos find the sample have the weight lose.
